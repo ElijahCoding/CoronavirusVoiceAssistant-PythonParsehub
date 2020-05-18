@@ -51,8 +51,6 @@ class Data:
             countries.append(content['name'])
         return countries
 
-data = Data(api_key=API_KEY, project_token=PROJECT_TOKEN)
-
 def speak(text):
 	engine = pyttsx3.init()
 	engine.say(text)
@@ -71,4 +69,31 @@ def get_audio():
     return said.lower()
 
 def main():
-    pass
+    print("Started Program")
+    data = Data(api_key=API_KEY, project_token=PROJECT_TOKEN)
+    END_PHRASE = "stop"
+
+    TOTAL_PATTERNS = {
+        re.compile("[\w\s]+ total [\w\s]+ cases"): data.get_total_cases,
+        re.compile("[\w\s]+ total cases"): data.get_total_cases,
+        re.compile("[\w\s]+ total [\w\s]+ deaths"): data.get_total_deaths,
+        re.compile("[\w\s]+ total deaths"): data.get_total_deaths
+    }
+
+    while True:
+        print("Listening...")
+        text = get_audio()
+        result = None
+
+        for pattern, func in TOTAL_PATTERNS.items():
+            if pattern.match(text):
+                result = func()
+                break
+        
+        if result:
+            speak(result)
+
+        if text.find(END_PHRASE):
+            break
+
+main()
