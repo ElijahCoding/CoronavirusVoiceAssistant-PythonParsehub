@@ -17,13 +17,13 @@ class Data:
         self.params = {
             "api_key": self.api_key
         }
-        self.get_data()
+        self.data = self.get_data()
 
     def get_data(self):
         response = requests.get(f'https://www.parsehub.com/api/v2/projects/{self.project_token}/last_ready_run/data',
                                 params=self.params)
         data = json.loads(response.text)
-        self.data = data
+        return data
 
     def get_total_cases(self):
         data = self.data['total']
@@ -51,6 +51,23 @@ class Data:
             countries.append(content['name'])
         return countries
 
+    def update_data(self):
+        response = requests.post(f'https://www.parsehub.com/api/v2/projects/{self.project_token}/run',
+                                 params=self.params)
+        def poll():
+            time.sleep(0.1)
+            old_data = self.data
+            while True:
+                new_data = self.get_data()
+                if new_data != old_data:
+                    self.data = new_data
+                    print("Data updated")
+                    break
+                time.sleep(5)
+
+        t = threading.Thread(target=poll)
+        t.start()
+
 def speak(text):
 	engine = pyttsx3.init()
 	engine.say(text)
@@ -72,6 +89,7 @@ def main():
     print("Started Program")
     data = Data(api_key=API_KEY, project_token=PROJECT_TOKEN)
     END_PHRASE = "stop"
+    country_list = data.get_list_of_countries()
 
     TOTAL_PATTERNS = {
         re.compile("[\w\s]+ total [\w\s]+ cases"): data.get_total_cases,
@@ -93,10 +111,22 @@ def main():
         print(text)
         result = None
 
+        for pattern, func in COUNTRY_PATTERNS.items():
+            if pattern.match(text):
+                words = set(text.splitt(" "))
+                for country in country_list:
+                    if country in words:
+                        result = func(country)
+                        break
+
         for pattern, func in TOTAL_PATTERNS.items():
             if pattern.match(text):
                 result = func()
                 break
+
+        if text == UPDATE_COMMAND:
+            result = "Data is being updated. This may take a moment."
+            data.update_data()
         
         if result:
             speak(result)
