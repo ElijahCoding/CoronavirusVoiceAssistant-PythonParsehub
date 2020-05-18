@@ -1,5 +1,10 @@
 import requests
 import json
+import pyttsx3
+import speech_recognition as sr
+import re
+import threading
+import time
 
 API_KEY = "taqCsiGqTyOq"
 PROJECT_TOKEN = "ti6sVYWTYboW"
@@ -40,5 +45,12 @@ class Data:
                 return content
         return "0"
 
+
 data = Data(api_key=API_KEY, project_token=PROJECT_TOKEN)
-print(data.get_data())
+
+def speak(text):
+	engine = pyttsx3.init()
+	engine.say(text)
+	engine.runAndWait()
+
+speak("hello")
