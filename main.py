@@ -8,7 +8,7 @@ import time
 
 API_KEY = "taqCsiGqTyOq"
 PROJECT_TOKEN = "ti6sVYWTYboW"
-RUN_TOKEN = "tQS9TX70Qsf8"
+RUN_TOKEN = "tHCyScA823Ld"
 
 class Data:
     def __init__(self, api_key, project_token):
@@ -45,6 +45,11 @@ class Data:
                 return content
         return "0"
 
+    def get_list_of_countries(self):
+        countries = []
+        for content in self.data['country']:
+            countries.append(content['name'])
+        return countries
 
 data = Data(api_key=API_KEY, project_token=PROJECT_TOKEN)
 
@@ -53,4 +58,17 @@ def speak(text):
 	engine.say(text)
 	engine.runAndWait()
 
-speak("hello")
+def get_audio():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        audio = r.listen(source)
+        said = ""
+
+        try:
+            said = r.recognize_google(audio)
+        except Exception as e:
+            print("Exception:", str(e))
+    return said.lower()
+
+def main():
+    pass
